@@ -134,24 +134,29 @@ resource "google_cloudbuild_trigger" "github_trigger" {
     name  = var.github_repo
 
     push {
-      branch = var.build_trigger_branch
+      branch_regex = var.build_trigger_branch  # Use branch_regex for regex patterns
     }
   }
 
   build {
-    step {
+    steps {
       name = "gcr.io/cloud-builders/docker"
       args = [
         "build",
         "-t",
-        "gcr.io/${var.project_id}/${var.docker_image_name}",
+        "gcr.io/${var.project_id}/${var.docker_image_name}:$SHORT_SHA",
         "."
       ]
     }
 
-    images = ["gcr.io/${var.project_id}/${var.docker_image_name}"]
+    images = ["gcr.io/${var.project_id}/${var.docker_image_name}:$SHORT_SHA"]
+  }
+
+  substitutions = {
+    SHORT_SHA = "$SHORT_SHA"
   }
 }
+
 # Google Cloud Composer Environment
 resource "google_composer_environment" "my_composer_env" {
   name   = var.composer_env_name
