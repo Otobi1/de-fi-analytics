@@ -71,7 +71,7 @@ variable "github_repo" {
 variable "build_trigger_branch" {
   description = "Branch name to trigger Cloud Build (regex supported)"
   type        = string
-  default     = "^main$"
+  default     = "^master$"
 }
 
 # Optional: Define the Docker image name for Cloud Build (default is 'my-app')
@@ -82,6 +82,11 @@ variable "docker_image_name" {
 }
 
 # Define the GitHub repository URL (for output)
+variable "github_connection_id" {
+  description = "Cloud Build Connection ID to GitHub repository"
+  type        = string
+}
+
 variable "git_repo_url" {
   description = "URL of the GitHub repository"
   type        = string
@@ -131,16 +136,3 @@ variable "composer_pypi_packages" {
     "requests" = ">=2.25.1" # Add other Python packages as needed
   }
 }
-
-# # Optional: Define network configurations for Composer
-# variable "composer_network" {
-#   description = "VPC network for the Composer environment"
-#   type        = string
-#   default     = "composer-network"  # Desired network name
-# }
-#
-# variable "composer_subnetwork" {
-#   description = "Subnetwork for the Composer environment"
-#   type        = string
-#   default     = "composer-subnetwork"  # Desired subnetwork name
-# }
