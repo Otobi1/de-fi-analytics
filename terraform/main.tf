@@ -136,43 +136,29 @@ resource "google_cloudbuild_trigger" "github_trigger" {
     push {
       branch = var.build_trigger_branch
     }
-
-    # Optional: Specify a connection if using a GitHub App
-    # connection = "projects/your-project-id/connections/your-connection-id"
   }
 
   build {
     step {
       name = "gcr.io/cloud-builders/docker"
-      args = ["build", "-t", "gcr.io/${var.project_id}/${var.docker_image_name}", "."]
+      args = [
+        "build",
+        "-t",
+        "gcr.io/${var.project_id}/${var.docker_image_name}",
+        "."
+      ]
     }
 
     images = ["gcr.io/${var.project_id}/${var.docker_image_name}"]
   }
 }
-
-# Create a VPC network for Composer
-# resource "google_compute_network" "composer_network" {
-#   name                    = var.composer_network
-#   auto_create_subnetworks = false # Set to false to use custom subnetworks
-#   project                 = var.project_id
-# }
-#
-# # Create a subnetwork for Composer
-# resource "google_compute_subnetwork" "composer_subnetwork" {
-#   name          = var.composer_subnetwork
-#   ip_cidr_range = "10.1.0.0/24" # Adjust the CIDR range as needed
-#   network       = google_compute_network.composer_network.name
-#   region        = var.region
-#   project       = var.project_id
-# }
-
+# Google Cloud Composer Environment
 resource "google_composer_environment" "my_composer_env" {
   name   = var.composer_env_name
   region = var.region
 
   config {
-    node_count = var.composer_node_count
+    #     node_count = var.composer_node_count
 
     software_config {
       image_version = var.composer_image_version
@@ -191,4 +177,11 @@ resource "google_composer_environment" "my_composer_env" {
     }
   }
 }
+
+# Grant Cloud Composer v2 API Service Agent Extension role to the Composer service agent
+# resource "google_project_iam_member" "composer_service_agent_extension" {
+#   project = var.project_id
+#   role    = "roles/composer.serviceAgentExtension"
+#   member  = "serviceAccount:service-781183121559@cloudcomposer-accounts.iam.gserviceaccount.com" # de-fi-244@sapient-hub-442421-b5.iam.gserviceaccount.com"
+# }
 
