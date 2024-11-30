@@ -15,3 +15,10 @@ steps:
 
 images:
   - 'gcr.io/$PROJECT_ID/de-fi-app:$SHORT_SHA'
+
+options:
+  default_logs_bucket_behavior: REGIONAL_USER_OWNED_BUCKET
+  logs_bucket: gs://europe-west1-de-fi-analytic-0924267d-bucket
+
+service_account: de-fi-244@sapient-hub-442421-b5.iam.gserviceaccount.com
+

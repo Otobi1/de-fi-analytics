@@ -62,10 +62,10 @@ output "cloudbuild_trigger_name" {
 # --------------------------------------------
 # Optional: Output Cloud Composer Environment Details
 # --------------------------------------------
-output "composer_env_name" {
-  description = "The name of the Cloud Composer environment"
-  value       = google_composer_environment.my_composer_env.name
-}
+# output "composer_env_name" {
+#   description = "The name of the Cloud Composer environment"
+#   value       = google_composer_environment.my_composer_env.name
+# }
 
 # output "composer_env_uri" {
 #   description = "The URI of the Cloud Composer environment's Airflow web interface"
