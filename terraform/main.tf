@@ -134,12 +134,12 @@ resource "google_cloudbuild_trigger" "github_trigger" {
     name  = var.github_repo
 
     push {
-      branch_regex = var.build_trigger_branch  # Use branch_regex for regex patterns
+      branch = var.build_trigger_branch  # Use branch_regex for regex patterns
     }
   }
 
   build {
-    steps {
+    step {
       name = "gcr.io/cloud-builders/docker"
       args = [
         "build",
@@ -156,32 +156,32 @@ resource "google_cloudbuild_trigger" "github_trigger" {
     SHORT_SHA = "$SHORT_SHA"
   }
 }
-
-# Google Cloud Composer Environment
-resource "google_composer_environment" "my_composer_env" {
-  name   = var.composer_env_name
-  region = var.region
-
-  config {
-    #     node_count = var.composer_node_count
-
-    software_config {
-      image_version = var.composer_image_version
-
-      env_variables = var.composer_env_variables
-
-      pypi_packages = var.composer_pypi_packages
-    }
-
-    private_environment_config {
-      enable_private_endpoint = true
-      master_ipv4_cidr_block  = "10.0.0.0/24"
-
-      #       network    = data.google_compute_network.composer_network.name
-      #       subnetwork = data.google_compute_subnetwork.composer_subnetwork.name
-    }
-  }
-}
+#
+# # Google Cloud Composer Environment
+# resource "google_composer_environment" "my_composer_env" {
+#   name   = var.composer_env_name
+#   region = var.region
+#
+#   config {
+#     #     node_count = var.composer_node_count
+#
+#     software_config {
+#       image_version = var.composer_image_version
+#
+#       env_variables = var.composer_env_variables
+#
+#       pypi_packages = var.composer_pypi_packages
+#     }
+#
+#     private_environment_config {
+#       enable_private_endpoint = true
+#       master_ipv4_cidr_block  = "10.0.0.0/24"
+#
+#       #       network    = data.google_compute_network.composer_network.name
+#       #       subnetwork = data.google_compute_subnetwork.composer_subnetwork.name
+#     }
+#   }
+# }
 
 # Grant Cloud Composer v2 API Service Agent Extension role to the Composer service agent
 # resource "google_project_iam_member" "composer_service_agent_extension" {
