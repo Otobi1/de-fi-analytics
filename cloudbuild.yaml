@@ -1,30 +1,17 @@
 steps:
-  # Step 1: Authenticate Docker with GCR
-  - name: 'gcr.io/cloud-builders/gcloud'
-    entrypoint: 'bash'
-    args:
-      - '-c'
-      - |
-        echo $GCLOUD_SERVICE_KEY | base64 --decode > /tmp/gcloud-key.json
-        gcloud auth activate-service-account --key-file=/tmp/gcloud-key.json
-        gcloud auth configure-docker
-
-  # Step 2: Build the Docker image
+  # Step 1: Build the Docker image
   - name: 'gcr.io/cloud-builders/docker'
     args:
       - 'build'
       - '-t'
-      - 'gcr.io/$PROJECT_ID/${_DOCKER_IMAGE_NAME}:$SHORT_SHA'
+      - 'gcr.io/$PROJECT_ID/de-fi-app:$SHORT_SHA'
       - '.'
 
-  # Step 3: Push the Docker image to GCR
+  # Step 2: Push the Docker image to GCR
   - name: 'gcr.io/cloud-builders/docker'
     args:
       - 'push'
-      - 'gcr.io/$PROJECT_ID/${_DOCKER_IMAGE_NAME}:$SHORT_SHA'
+      - 'gcr.io/$PROJECT_ID/de-fi-app:$SHORT_SHA'
 
 images:
-  - 'gcr.io/$PROJECT_ID/${_DOCKER_IMAGE_NAME}:$SHORT_SHA'
-
-substitutions:
-  _DOCKER_IMAGE_NAME: '${_DOCKER_IMAGE_NAME}'
+  - 'gcr.io/$PROJECT_ID/de-fi-app:$SHORT_SHA'
