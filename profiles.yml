@@ -1,0 +1,11 @@
+default:
+  target: dev
+  outputs:
+    dev:
+      type: bigquery
+      method: service-account
+      project: sapient-hub-442421-b5
+      dataset: de_fi_analytics
+      keyfile: ./keys/my-cred.json
+      threads: 4
+      timeout_seconds: 300
