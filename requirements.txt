@@ -1,0 +1,4 @@
+dbt-bigquery
+requests
+pandas
+apache-airflow
