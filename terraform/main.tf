@@ -134,7 +134,7 @@ resource "google_cloudbuild_trigger" "github_trigger" {
     name  = var.github_repo
 
     push {
-      branch = var.build_trigger_branch  # Use branch_regex for regex patterns
+      branch = var.build_trigger_branch # Use branch_regex for regex patterns
     }
   }
 
