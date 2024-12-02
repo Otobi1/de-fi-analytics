@@ -1,10 +1,6 @@
-FROM ubuntu:latest
-LABEL authors="tobi"
-
-ENTRYPOINT ["top", "-b"]
-
 # Use an official Python runtime as the base image
 FROM python:3.9-slim
+LABEL authors="tobi"
 
 # Set environment variables to optimize Python behavior
 ENV PYTHONDONTWRITEBYTECODE=1
@@ -40,8 +36,5 @@ COPY profiles.yml /root/.dbt/profiles.yml
 # Set environment variables for dbt
 ENV DBT_PROFILES_DIR=/root/.dbt
 
-# Expose port if your application requires it (optional)
-# EXPOSE 8080
 # Define the entry point for the container
-# Replace 'ingest_data.py' with your actual data ingestion script
 CMD ["python", "ingest_data.py"]

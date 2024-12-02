@@ -3,9 +3,11 @@ import requests
 import pandas as pd
 from datetime import datetime, timezone
 import logging
+import yaml
 
 # Configure logging
 logging.basicConfig(level=logging.INFO, format='%(asctime)s %(levelname)s:%(message)s')
+
 
 def fetch_data(api_url):
     try:
@@ -17,6 +19,7 @@ def fetch_data(api_url):
     except requests.exceptions.RequestException as e:
         logging.error(f"Error fetching data from API: {e}")
         raise
+
 
 def save_data(data, filename):
     try:
@@ -49,12 +52,48 @@ def save_data(data, filename):
         logging.error(f"Error saving data to {filename}: {e}")
         raise
 
+
+def create_profiles():
+    try:
+        profiles = {
+            "default": {
+                "target": "dev",
+                "outputs": {
+                    "dev": {
+                        "type": "bigquery",  # or your specific adapter
+                        "method": "service-account",
+                        "project": os.getenv("DBT_PROJECT"),
+                        "dataset": os.getenv("DBT_DATASET"),
+                        "keyfile": os.getenv("DBT_KEYFILE"),  # Path inside the container
+                        "threads": 4,
+                        "timeout_seconds": 300
+                    }
+                }
+            }
+        }
+        os.makedirs('/root/.dbt', exist_ok=True)
+        with open('/root/.dbt/profiles.yml', 'w') as f:
+            yaml.dump(profiles, f)
+        logging.info("profiles.yml created successfully.")
+    except Exception as e:
+        logging.error(f"Error creating profiles.yml: {e}")
+        raise
+
+
 def main():
     try:
+        # Create profiles.yml from environment variables
+        create_profiles()
+
         # Your data ingestion logic
-        api_url = 'https://randomuser.me/api/'
+        api_url = os.getenv('API_URL', 'https://randomuser.me/api/')  # Default value if API_URL not set
+        if not api_url:
+            logging.error("API_URL environment variable is not set.")
+            raise ValueError("API_URL environment variable is not set.")
+
         data = fetch_data(api_url)
 
+        # Replace deprecated utcnow() with timezone-aware datetime
         timestamp = datetime.now(timezone.utc).strftime('%Y%m%d%H%M%S')
         filename = f'data_ingested_{timestamp}.txt'
         save_data(data, filename)
@@ -62,6 +101,7 @@ def main():
     except Exception as e:
         logging.error(f"An error occurred in the ingestion process: {e}")
         exit(1)
+
 
 if __name__ == '__main__':
     main()
