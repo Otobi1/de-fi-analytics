@@ -1,7 +1,7 @@
 from airflow import DAG
 from airflow.operators.python import PythonOperator
 from datetime import datetime, timedelta
-from scripts import ingest_data
+import ingest_data
 
 default_args = {
     'start_date': datetime(2024, 12, 1),
