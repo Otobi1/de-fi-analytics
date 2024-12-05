@@ -27,7 +27,7 @@ steps:
     args:
       - '-m'
       - 'cp'
-      - './dags/scripts/ingest_data.py'
+      - './scripts/ingest_data.py'
       - 'gs://europe-west1-de-fi-analytic-102096ac-bucket/dags/'
 
 images:
