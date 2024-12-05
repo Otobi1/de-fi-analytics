@@ -4,7 +4,7 @@ import datetime
 from airflow import DAG
 from airflow.operators.python_operator import PythonOperator
 from airflow.utils.dates import days_ago
-from dags.scripts import ingest
+from scripts import ingest
 
 # Default arguments for the DAG
 default_args = {
