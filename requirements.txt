@@ -2,3 +2,5 @@ dbt-bigquery
 requests
 pandas
 apache-airflow
+pyarrow
+google-cloud-storage
