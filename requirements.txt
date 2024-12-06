@@ -4,3 +4,4 @@ pandas
 apache-airflow
 pyarrow
 google-cloud-storage
+tenacity

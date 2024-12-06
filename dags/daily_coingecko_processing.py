@@ -1,38 +1,23 @@
 
-import datetime
-
 from airflow import DAG
-from airflow.operators.python_operator import PythonOperator
-from airflow.utils.dates import days_ago
+from airflow.operators.python import PythonOperator
+from datetime import datetime, timedelta
 import ingest
 
-# Default arguments for the DAG
 default_args = {
-    'owner': 't.o',
-    'depends_on_past': False,
-    'email': ['tobi.olutunmbi@gmail.com'],
-    'email_on_failure': True,
-    'email_on_retry': False,
-    'retries': 3,
-    'retry_delay': datetime.timedelta(minutes=5),
+    'start_date': datetime(2024, 12, 1),
+    'retries': 1,
+    'retry_delay': timedelta(minutes=5),
 }
 
-def run_ingest():
-    ingest.main()
-
-
-dag = DAG(
-    'daily_coingecko_processing',
-    default_args=default_args,
-    description='Ingest CoinGecko data into Google Cloud Storage as Parquet files',
-    schedule_interval='@daily',
-    start_date=days_ago(10),
-    catchup=True,
-)
-
-ingest_task = PythonOperator(
-    task_id='ingest_coingecko_to_gcs',
-    python_callable=run_ingest,
-    provide_context=True,
-    dag=dag,
-)
+with DAG(
+        'daily_coingecko_ingest',
+        schedule_interval='@daily',
+        default_args=default_args,
+        catchup=False,
+        description='A DAG to ingest CoinGecko data from CSV list into GCS',
+) as dag:
+    run_ingest = PythonOperator(
+        task_id='run_ingest_data',
+        python_callable=ingest,
+    )
