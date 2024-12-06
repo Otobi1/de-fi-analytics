@@ -20,7 +20,7 @@ steps:
       - 'cp'
       - '-r'
       - './dags/*.py'
-      - 'gs://europe-west1-de-fi-analytic-102096ac-bucket/dags/'
+      - 'gs://europe-west1-de-fi-analytic-93a45c09-bucket/dags'
 
   # Step 4: Upload additional scripts to GCS
   - name: 'gcr.io/cloud-builders/gsutil'
@@ -28,7 +28,7 @@ steps:
       - '-m'
       - 'cp'
       - './scripts/*.py'
-      - 'gs://europe-west1-de-fi-analytic-102096ac-bucket/dags/'
+      - 'gs://europe-west1-de-fi-analytic-93a45c09-bucket/dags'
 
 images:
   - 'gcr.io/$PROJECT_ID/de-fi-app:latest'
