@@ -30,12 +30,12 @@ steps:
       - './scripts/*.py'
       - 'gs://europe-west1-de-fi-analytic-93a45c09-bucket/dags'
 
-  # Step : Upload additional list of coins as csv to GCS
+  # Step 5: Upload additional list of coins as csv to GCS
   - name: 'gcr.io/cloud-builders/gsutil'
     args:
       - '-m'
       - 'cp'
-      - './list.csv'
+      - './id.csv'
       - 'gs://europe-west1-de-fi-analytic-93a45c09-bucket/dags'
 
 images:
