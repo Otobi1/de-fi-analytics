@@ -10,6 +10,9 @@ default_args = {
     'retry_delay': timedelta(minutes=5),
 }
 
+def run_ingest():
+    ingest.main()
+
 with DAG(
         'daily_coingecko_ingest',
         schedule_interval='@daily',
@@ -19,5 +22,5 @@ with DAG(
 ) as dag:
     run_ingest = PythonOperator(
         task_id='run_ingest_data',
-        python_callable=ingest,
+        python_callable=run_ingest,
     )
