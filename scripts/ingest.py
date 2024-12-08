@@ -28,7 +28,7 @@ GCS_PREFIX = "market_data"
 DATA_PARTITION_FORMAT = "%Y-%m-%d"
 
 # Path to the CSV file containing the list of coins
-COINS_CSV_PATH = os.path.join(os.path.dirname(__file__), 'scripts', 'id.csv')
+COINS_CSV_PATH = os.path.join(os.path.dirname(__file__), 'id.csv')
 
 # Initialize GCS client
 storage_client = storage.Client()
