@@ -10,7 +10,6 @@ from typing import List, Dict
 import logging
 from tenacity import retry, stop_after_attempt, wait_exponential, retry_if_exception_type
 import time
-from concurrent.futures import ThreadPoolExecutor, as_completed
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
@@ -34,7 +33,7 @@ COINS_CSV_PATH = os.path.join(os.path.dirname(__file__), 'id.csv')
 storage_client = storage.Client()
 bucket = storage_client.bucket(GCS_BUCKET_NAME)
 
-# Define rate limiter: 50 calls per minute (1.2 seconds between requests)
+# Define rate limiter: Adjust based on APIs rate limits
 RATE_LIMIT_DELAY = 1.2  # seconds
 
 
@@ -46,9 +45,27 @@ def get_coins_from_csv(csv_path: str) -> List[Dict]:
     """
     try:
         df = pd.read_csv(csv_path)
+        # Standardize column names to lowercase to avoid case sensitivity issues
+        df.columns = [col.strip().lower() for col in df.columns]
+
+        # Rename columns if necessary
+        if 'id' in df.columns and 'coin_id' not in df.columns:
+            df.rename(columns={'id': 'coin_id'}, inplace=True)
+        elif 'coinid' in df.columns and 'coin_id' not in df.columns:
+            df.rename(columns={'coinid': 'coin_id'}, inplace=True)
+
         coins = df.to_dict(orient='records')
-        logger.info(f"Loaded {len(coins)} coins from CSV.")
-        return coins
+        # Verify that each coin has a 'coin_id'
+        valid_coins = [coin for coin in coins if 'coin_id' in coin and pd.notna(coin['coin_id'])]
+        invalid_coins = [coin for coin in coins if 'coin_id' not in coin or pd.isna(coin['coin_id'])]
+
+        if invalid_coins:
+            logger.warning(f"{len(invalid_coins)} coins are missing 'coin_id' and will be skipped.")
+            for coin in invalid_coins:
+                logger.warning(f"Invalid coin entry: {coin}")
+
+        logger.info(f"Loaded {len(valid_coins)} valid coins from CSV.")
+        return valid_coins
     except Exception as e:
         logger.error(f"Error reading CSV file at {csv_path}: {e}")
         raise
@@ -74,6 +91,7 @@ def get_market_chart(coin_id: str, days: int = 1) -> Dict:
         "interval": "daily"
     }
     response = requests.get(url, params=params)
+
     if response.status_code == 429:
         retry_after = response.headers.get("Retry-After")
         if retry_after:
@@ -82,10 +100,12 @@ def get_market_chart(coin_id: str, days: int = 1) -> Dict:
             time.sleep(wait_time)
         else:
             logger.warning(f"Received 429 for {coin_id}. Retrying with exponential backoff.")
+            # If no Retry-After header, tenacity's wait_exponential will handle
         response.raise_for_status()
     elif response.status_code >= 400:
         logger.error(f"Error {response.status_code} for {coin_id}: {response.text}")
         response.raise_for_status()
+
     logger.info(f"Fetched market chart for {coin_id}.")
     return response.json()
 
@@ -112,7 +132,7 @@ def write_parquet_to_gcs(df: pd.DataFrame, partition_date: str):
     logger.info(f"Written data to gs://{GCS_BUCKET_NAME}/{gcs_path}")
 
 
-def main() -> object:
+def main() -> None:
     """
     Main function to orchestrate the ingestion process.
     """
@@ -132,28 +152,26 @@ def main() -> object:
 
     all_data = []
 
-    # Use ThreadPoolExecutor to fetch data concurrently
-    max_workers = 10  # Adjust based on rate limits
-    with ThreadPoolExecutor(max_workers=max_workers) as executor:
-        future_to_coin = {executor.submit(get_market_chart, coin['id'], DAYS): coin for coin in coins}
-        for future in as_completed(future_to_coin):
-            coin = future_to_coin[future]
-            coin_id = coin['coin_id']
-            try:
-                market_chart = future.result()
-                market_chart['coin_id'] = coin_id
-                all_data.append(market_chart)
-                logger.info(f"Successfully fetched data for {coin_id}.")
-                time.sleep(RATE_LIMIT_DELAY)  # Throttle requests
-            except requests.exceptions.HTTPError as http_err:
-                if http_err.response.status_code == 429:
-                    logger.error(f"Rate limit exceeded for {coin_id}. Skipping...")
-                else:
-                    logger.error(f"HTTP error for {coin_id}: {http_err}")
-                continue
-            except Exception as e:
-                logger.error(f"Unexpected error for {coin_id}: {e}")
-                continue
+    # Sequentially fetch data for each coin
+    for idx, coin in enumerate(coins, start=1):
+        coin_id = coin['coin_id']
+        logger.info(f"Processing coin {idx}/{len(coins)}: {coin_id}")
+        try:
+            market_chart = get_market_chart(coin_id, DAYS)
+            market_chart['coin_id'] = coin_id
+            all_data.append(market_chart)
+            logger.info(f"Successfully fetched data for {coin_id}.")
+        except requests.exceptions.HTTPError as http_err:
+            if http_err.response.status_code == 429:
+                logger.error(f"Rate limit exceeded for {coin_id}. Will retry as per retry strategy.")
+            else:
+                logger.error(f"HTTP error for {coin_id}: {http_err}")
+        except Exception as e:
+            logger.error(f"Unexpected error for {coin_id}: {e}")
+
+        # Throttle requests to respect rate limits
+        logger.debug(f"Sleeping for {RATE_LIMIT_DELAY} seconds to respect rate limits.")
+        time.sleep(RATE_LIMIT_DELAY)
 
     if not all_data:
         logger.warning("No data fetched. Exiting.")
