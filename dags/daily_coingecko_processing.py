@@ -10,7 +10,7 @@ default_args = {
     'retry_delay': timedelta(minutes=5),
 }
 
-def run_ingest():
+def execute_ingest():
     ingest.main()
 
 with DAG(
@@ -22,5 +22,5 @@ with DAG(
 ) as dag:
     run_ingest = PythonOperator(
         task_id='run_ingest_data',
-        python_callable=run_ingest,
+        python_callable=execute_ingest,
     )

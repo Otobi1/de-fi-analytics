@@ -135,7 +135,7 @@ def main() -> object:
     # Use ThreadPoolExecutor to fetch data concurrently
     max_workers = 10  # Adjust based on rate limits
     with ThreadPoolExecutor(max_workers=max_workers) as executor:
-        future_to_coin = {executor.submit(get_market_chart, coin['coin_id'], DAYS): coin for coin in coins}
+        future_to_coin = {executor.submit(get_market_chart, coin['id'], DAYS): coin for coin in coins}
         for future in as_completed(future_to_coin):
             coin = future_to_coin[future]
             coin_id = coin['coin_id']
