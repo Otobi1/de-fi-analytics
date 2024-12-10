@@ -13,7 +13,7 @@ def execute_ingest():
     ingest_hourly.main()
 
 with DAG(
-        'daily_coingecko_ingest',
+        'de_fi_hourly_coingecko_ingest',
         schedule_interval='@daily',
         default_args=default_args,
         catchup=False,
