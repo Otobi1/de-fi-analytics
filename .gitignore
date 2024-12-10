@@ -162,3 +162,10 @@ cython_debug/
 #.idea/
 
 notes.txt
+.hcl
+.terraform
+.tfstate
+.backup
+.tfvars
+keys/
+.DS_Store
