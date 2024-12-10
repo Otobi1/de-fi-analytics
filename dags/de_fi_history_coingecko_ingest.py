@@ -14,7 +14,7 @@ def execute_ingest():
 
 with DAG(
         'de_fi_history_coingecko_ingest',
-        schedule_interval='@daily',
+        schedule_interval='@once',
         default_args=default_args,
         catchup=False,
         description='A DAG to ingest CoinGecko data from CSV list into GCS',
