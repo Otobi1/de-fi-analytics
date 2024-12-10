@@ -164,8 +164,13 @@ cython_debug/
 notes.txt
 .hcl
 .terraform
-.tfstate
+.terraform.lock.hcl
+terraform.tfstate
+terraform.tfstate.backup
 .backup
-.tfvars
+terraform.tfvars
 keys/
 .DS_Store
+output/
+market_data_test/
+archive/

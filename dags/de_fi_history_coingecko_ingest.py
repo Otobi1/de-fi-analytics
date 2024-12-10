@@ -13,7 +13,7 @@ def execute_ingest():
     ingest_history.main()
 
 with DAG(
-        'daily_coingecko_ingest',
+        'de_fi_history_coingecko_ingest',
         schedule_interval='@daily',
         default_args=default_args,
         catchup=False,
