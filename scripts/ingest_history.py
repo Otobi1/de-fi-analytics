@@ -19,7 +19,7 @@ logger = logging.getLogger(__name__)
 COINGECKO_API_BASE = "https://api.coingecko.com/api/v3"
 MARKET_CHART_ENDPOINT_TEMPLATE = "/coins/{id}/market_chart"
 VS_CURRENCY = "eur"
-DAYS = "max"  # Fetches all available historical data
+DAYS = 365 # Fetches all available historical data
 
 # Google Cloud Storage Configuration
 GCS_BUCKET_NAME = "de-fi"
@@ -75,7 +75,7 @@ def get_coins_from_csv(csv_path: str) -> List[Dict]:
     stop=stop_after_attempt(5),
     wait=wait_exponential(multiplier=1, min=4, max=60)
 )
-def get_market_chart(coin_id: str, days: str = "max") -> Dict:
+def get_market_chart(coin_id: str, days: int = 1) -> Dict:
     """
     Fetch market chart data for a given coin ID with retry logic and Retry-After handling.
     :param coin_id: The CoinGecko coin ID.
