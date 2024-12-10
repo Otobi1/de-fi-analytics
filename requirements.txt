@@ -5,3 +5,5 @@ apache-airflow
 pyarrow
 google-cloud-storage
 tenacity
+apache-airflow-providers-google
+tenacity
