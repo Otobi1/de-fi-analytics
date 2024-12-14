@@ -39,7 +39,7 @@ def execute_ingest():
 
 def create_raw_table_if_not_exists(**kwargs):
     client = bigquery.Client()
-    table_id = f"{DATASET_ID}.raw_table"
+    table_id = f"{DATASET_ID}.{RAW_TABLE_ID}"
 
     try:
         client.get_table(table_id)
