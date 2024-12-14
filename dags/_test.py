@@ -37,22 +37,27 @@ def execute_ingest():
     ingest_hourly.main()
 
 
-def create_raw_table_if_not_exists(**kwargs):
+def check_and_create_table(**kwargs):
+    """
+    Checks if the BigQuery table exists. If not, creates it with the specified partitioning.
+    """
     client = bigquery.Client()
     table_id = f"{DATASET_ID}.{RAW_TABLE_ID}"
 
     try:
         client.get_table(table_id)
-        print(f"Table {table_id} already exists.")
-    except Exception:
+        print(f"Table `{table_id}` already exists.")
+    except NotFound:
         table = bigquery.Table(table_id)
         table.time_partitioning = bigquery.TimePartitioning(
             type_=bigquery.TimePartitioningType.DAY,
-            field="fetch_date",
+            field=PARTITION_FIELD,
         )
         client.create_table(table)
-        print(f"Table {table_id} created with partitioning on ingestion_time.")
-
+        print(f"Table `{table_id}` created with partitioning on `{PARTITION_FIELD}`.")
+    except Exception as e:
+        print(f"An unexpected error occurred: {e}")
+        raise
 
 # def create_agg_table_if_not_exists(**kwargs):
 #     client = bigquery.Client()
@@ -89,21 +94,11 @@ with DAG(
     )
 
     # Check if Raw Table Exists
-    check_raw_table = BigQueryCheckOperator(
-        task_id='check_raw_table_exists',
-        sql=f"""
-                SELECT COUNT(*) 
-                FROM `{DATASET_ID}.INFORMATION_SCHEMA.TABLES` 
-                WHERE table_name = '{RAW_TABLE_ID}'
-            """,
-        use_legacy_sql=False,
+    check_and_create_table_task = PythonOperator(
+        task_id='check_and_create_raw_table',
+        python_callable=check_and_create_table,
     )
 
-    # Create Raw Table if Not Exists
-    create_raw_table = PythonOperator(
-        task_id='create_raw_table_if_not_exists',
-        python_callable=create_raw_table_if_not_exists,
-    )
 
     # Load Data into Raw Table
     load_raw_data = GCSToBigQueryOperator(
