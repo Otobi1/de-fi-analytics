@@ -160,6 +160,6 @@ with DAG(
 
 
     # Define Task Dependencies
-    run_ingest >> check_raw_table >> create_raw_table >> load_raw_data
+    run_ingest >> check_and_create_table_task >> load_raw_data
     # check_agg_table >> create_agg_table_if_not_exists >> aggregate_data
     # load_raw_data >> aggregate_data
