@@ -4,7 +4,7 @@ from airflow.providers.google.cloud.operators.bigquery import (
     BigQueryCheckOperator,
     BigQueryInsertJobOperator,
 )
-from airflow.providers.google.cloud.transfers.gcs_to_bigquery import GCSBigQueryOperator
+from airflow.providers.google.cloud.transfers.gcs_to_bigquery import GCSToBigQueryOperator
 from airflow.operators.python import PythonOperator
 from google.cloud import bigquery
 from airflow.models import Variable
@@ -108,7 +108,7 @@ with DAG(
     )
 
     # Load Data into Raw Table
-    load_raw_data = GCSBigQueryOperator(
+    load_raw_data = GCSToBigQueryOperator(
         task_id='load_raw_data',
         bucket=GCS_BUCKET,
         source_objects=[GCS_PATH],
