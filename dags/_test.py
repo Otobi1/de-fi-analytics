@@ -7,10 +7,14 @@ from airflow.providers.google.cloud.operators.bigquery import (
 from airflow.providers.google.cloud.transfers.gcs_to_bigquery import GCSToBigQueryOperator
 from airflow.operators.python import PythonOperator
 from google.cloud import bigquery
+from google.api_core.exceptions import NotFound  # Added import
 from airflow.models import Variable
 from datetime import datetime, timedelta
+import logging
 import ingest_hourly
 
+
+logger = logging.getLogger(__name__)
 
 # Constants
 DATASET_ID = "de_fi_analytics"
@@ -46,7 +50,7 @@ def check_and_create_table(**kwargs):
 
     try:
         client.get_table(table_id)
-        print(f"Table `{table_id}` already exists.")
+        logger.info(f"Table `{table_id}` already exists.")
     except NotFound:
         table = bigquery.Table(table_id)
         table.time_partitioning = bigquery.TimePartitioning(
@@ -54,10 +58,11 @@ def check_and_create_table(**kwargs):
             field=PARTITION_FIELD,
         )
         client.create_table(table)
-        print(f"Table `{table_id}` created with partitioning on `{PARTITION_FIELD}`.")
+        logger.info(f"Table `{table_id}` created with partitioning on `{PARTITION_FIELD}`.")
     except Exception as e:
-        print(f"An unexpected error occurred: {e}")
+        logger.error(f"An unexpected error occurred: {e}")
         raise
+
 
 # def create_agg_table_if_not_exists(**kwargs):
 #     client = bigquery.Client()
