@@ -8,7 +8,7 @@ from airflow.providers.google.cloud.transfers.gcs_to_bigquery import GCSToBigQue
 from airflow.operators.python import PythonOperator
 from google.cloud import bigquery
 from airflow.models import Variable
-from datetime import timedelta
+from datetime import datetime, timedelta
 import ingest_hourly
 
 
