@@ -7,7 +7,7 @@ import ingest_hourly
 
 def create_default_args():
     return {
-        'owner': 'tobi.olutunmbi'
+        'owner': 'tobi.olutunmbi',
         'start_date': datetime(2024, 12, 1),
         'retries': 1,
         'retry_delay': timedelta(minutes=5),
