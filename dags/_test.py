@@ -45,9 +45,7 @@ def create_raw_table_if_not_exists(**kwargs):
         client.get_table(table_id)
         print(f"Table {table_id} already exists.")
     except Exception:
-        # Define table without a predefined schema; BigQuery will infer it
         table = bigquery.Table(table_id)
-        # Define partitioning
         table.time_partitioning = bigquery.TimePartitioning(
             type_=bigquery.TimePartitioningType.DAY,
             field="fetch_date",
@@ -118,7 +116,7 @@ with DAG(
         autodetect=True,
         time_partitioning={
             "type": "DAY",
-            "field": PARTITION_FIELD,  # Ensure this matches your data
+            "field": PARTITION_FIELD,
         },
     )
 
