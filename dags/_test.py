@@ -12,6 +12,14 @@ from datetime import datetime, timedelta
 import ingest_hourly
 
 
+# Constants
+DATASET_ID = "de_fi_analytics"
+RAW_TABLE_ID = "de_fi_hourly"
+GCS_BUCKET = "de-fi"
+GCS_PATH = "markets_hourly/*.parquet"
+PARTITION_FIELD = "fetch_date"
+
+
 def create_default_args():
     return {
         'owner': 'tobi.olutunmbi',
@@ -37,9 +45,7 @@ def create_raw_table_if_not_exists(**kwargs):
         client.get_table(table_id)
         print(f"Table {table_id} already exists.")
     except Exception:
-        # Define table without a predefined schema; BigQuery will infer it
         table = bigquery.Table(table_id)
-        # Define partitioning
         table.time_partitioning = bigquery.TimePartitioning(
             type_=bigquery.TimePartitioningType.DAY,
             field="fetch_date",
@@ -76,13 +82,6 @@ with DAG(
         description='A DAG to ingest CoinGecko data from CSV list into GCS',
 ) as dag:
 
-    # Constants
-    DATASET_ID = "de_fi_analytics"
-    RAW_TABLE_ID = "de_fi_hourly"
-    GCS_BUCKET = "de-fi"
-    GCS_PATH = "markets_hourly/*.parquet"
-    PARTITION_FIELD = "fetch_date"  # Replace with your timestamp field
-
 
     run_ingest = PythonOperator(
         task_id='run_ingest_data',
@@ -104,7 +103,6 @@ with DAG(
     create_raw_table = PythonOperator(
         task_id='create_raw_table_if_not_exists',
         python_callable=create_raw_table_if_not_exists,
-        provide_context=True,
     )
 
     # Load Data into Raw Table
@@ -113,14 +111,12 @@ with DAG(
         bucket=GCS_BUCKET,
         source_objects=[GCS_PATH],
         destination_project_dataset_table=f"{DATASET_ID}.{RAW_TABLE_ID}",
-        source_format='CSV',  # Adjust based on your data format
-        skip_leading_rows=1,  # If there's a header row
-        write_disposition='WRITE_APPEND',  # Append data on subsequent runs
-        autodetect=True,  # Enable schema auto-detection
-        field_delimiter=',',  # Adjust if necessary
+        source_format='PARQUET',
+        write_disposition='WRITE_APPEND',
+        autodetect=True,
         time_partitioning={
             "type": "DAY",
-            "field": PARTITION_FIELD,  # Ensure this matches your data
+            "field": PARTITION_FIELD,
         },
     )
 
