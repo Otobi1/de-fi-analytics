@@ -7,7 +7,7 @@ from airflow.providers.google.cloud.operators.bigquery import (
 from airflow.providers.google.cloud.transfers.gcs_to_bigquery import GCSToBigQueryOperator
 from airflow.operators.python import PythonOperator
 from google.cloud import bigquery
-from google.api_core.exceptions import NotFound  # Added import
+from google.api_core.exceptions import NotFound
 from airflow.models import Variable
 from datetime import datetime, timedelta
 import logging
@@ -43,12 +43,12 @@ TABLE_SCHEMA_OPERATOR = [
     {"name": "market_cap_change_percentage_24h", "type": "FLOAT", "mode": "NULLABLE"},
     {"name": "ath", "type": "FLOAT", "mode": "NULLABLE"},
     {"name": "ath_change_percentage", "type": "FLOAT", "mode": "NULLABLE"},
-    {"name": "ath_date", "type": "FLOAT", "mode": "NULLABLE"},
+    {"name": "ath_date", "type": "TIMESTAMP", "mode": "NULLABLE"},
     {"name": "atl", "type": "FLOAT", "mode": "NULLABLE"},
     {"name": "atl_change_percentage", "type": "FLOAT", "mode": "NULLABLE"},
-    {"name": "atl_date", "type": "FLOAT", "mode": "NULLABLE"},
+    {"name": "atl_date", "type": "TIMESTAMP", "mode": "NULLABLE"},
     {"name": "roi", "type": "FLOAT", "mode": "NULLABLE"},
-    {"name": "last_updated", "type": "FLOAT", "mode": "NULLABLE"},
+    {"name": "last_updated", "type": "TIMESTAMP", "mode": "NULLABLE"},
     {"name": "price_change_percentage_14d_in_currency", "type": "FLOAT", "mode": "NULLABLE"},
     {"name": "price_change_percentage_1y_in_currency", "type": "FLOAT", "mode": "NULLABLE"},
     {"name": "price_change_percentage_24h_in_currency", "type": "FLOAT", "mode": "NULLABLE"},
@@ -56,6 +56,42 @@ TABLE_SCHEMA_OPERATOR = [
     {"name": "price_change_percentage_7d_in_currency", "type": "FLOAT", "mode": "NULLABLE"},
     {"name": "fetch_date", "type": "DATE", "mode": "NULLABLE"},
     {"name": "fetch_hour", "type": "FLOAT", "mode": "NULLABLE"},
+]
+
+# Define the table schema using SchemaField for table creation
+TABLE_SCHEMA_CREATION = [
+    bigquery.SchemaField("id", "STRING", mode="NULLABLE"),
+    bigquery.SchemaField("symbol", "STRING", mode="NULLABLE"),
+    bigquery.SchemaField("name", "STRING", mode="NULLABLE"),
+    bigquery.SchemaField("image", "STRING", mode="NULLABLE"),
+    bigquery.SchemaField("current_price", "FLOAT", mode="NULLABLE"),
+    bigquery.SchemaField("market_cap", "FLOAT", mode="NULLABLE"),
+    bigquery.SchemaField("market_cap_change_24h", "FLOAT", mode="NULLABLE"),
+    bigquery.SchemaField("total_volume", "FLOAT", mode="NULLABLE"),
+    bigquery.SchemaField("fully_diluted_valuation", "FLOAT", mode="NULLABLE"),
+    bigquery.SchemaField("high_24h", "FLOAT", mode="NULLABLE"),
+    bigquery.SchemaField("low_24h", "FLOAT", mode="NULLABLE"),
+    bigquery.SchemaField("price_change_24h", "FLOAT", mode="NULLABLE"),
+    bigquery.SchemaField("price_change_percentage_24h", "FLOAT", mode="NULLABLE"),
+    bigquery.SchemaField("circulating_supply", "FLOAT", mode="NULLABLE"),
+    bigquery.SchemaField("total_supply", "FLOAT", mode="NULLABLE"),
+    bigquery.SchemaField("max_supply", "FLOAT", mode="NULLABLE"),
+    bigquery.SchemaField("market_cap_change_percentage_24h", "FLOAT", mode="NULLABLE"),
+    bigquery.SchemaField("ath", "FLOAT", mode="NULLABLE"),
+    bigquery.SchemaField("ath_change_percentage", "FLOAT", mode="NULLABLE"),
+    bigquery.SchemaField("ath_date", "TIMESTAMP", mode="NULLABLE"),
+    bigquery.SchemaField("atl", "FLOAT", mode="NULLABLE"),
+    bigquery.SchemaField("atl_change_percentage", "FLOAT", mode="NULLABLE"),
+    bigquery.SchemaField("atl_date", "TIMESTAMP", mode="NULLABLE"),
+    bigquery.SchemaField("roi", "FLOAT", mode="NULLABLE"),
+    bigquery.SchemaField("last_updated", "TIMESTAMP", mode="NULLABLE"),
+    bigquery.SchemaField("price_change_percentage_14d_in_currency", "FLOAT", mode="NULLABLE"),
+    bigquery.SchemaField("price_change_percentage_1y_in_currency", "FLOAT", mode="NULLABLE"),
+    bigquery.SchemaField("price_change_percentage_24h_in_currency", "FLOAT", mode="NULLABLE"),
+    bigquery.SchemaField("price_change_percentage_30d_in_currency", "FLOAT", mode="NULLABLE"),
+    bigquery.SchemaField("price_change_percentage_7d_in_currency", "FLOAT", mode="NULLABLE"),
+    bigquery.SchemaField("fetch_date", "DATE", mode="NULLABLE"),
+    bigquery.SchemaField("fetch_hour", "FLOAT", mode="NULLABLE"),
 ]
 
 
@@ -105,7 +141,7 @@ def check_and_create_table(**kwargs):
         client.get_table(table_full_id)
         logger.info(f"Table `{table_full_id}` already exists.")
     except NotFound:
-        table = bigquery.Table(table_full_id, schema=TABLE_SCHEMA_OPERATOR)
+        table = bigquery.Table(table_full_id, schema=TABLE_SCHEMA_CREATION)
         table.time_partitioning = bigquery.TimePartitioning(
             type_=bigquery.TimePartitioningType.DAY,
             field=PARTITION_FIELD,
