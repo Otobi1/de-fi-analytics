@@ -53,7 +53,7 @@ def check_and_create_table(**kwargs):
     """
     Checks if the BigQuery table exists. If not, creates it with the specified partitioning.
     """
-    client = bigquery.Client()
+    client = bigquery.Client(project='sapient-hub-442421-b5')
     project_id = client.project
     dataset_full_id = f"{project_id}.{DATASET_ID}"
     table_full_id = f"{dataset_full_id}.{RAW_TABLE_ID}"
