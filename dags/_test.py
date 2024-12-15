@@ -54,7 +54,7 @@ TABLE_SCHEMA_OPERATOR = [
     {"name": "price_change_percentage_24h_in_currency", "type": "FLOAT", "mode": "NULLABLE"},
     {"name": "price_change_percentage_30d_in_currency", "type": "FLOAT", "mode": "NULLABLE"},
     {"name": "price_change_percentage_7d_in_currency", "type": "FLOAT", "mode": "NULLABLE"},
-    {"name": "fetch_date", "type": "STRING", "mode": "NULLABLE"},
+    {"name": "fetch_date", "type": "DATE", "mode": "NULLABLE"},
     {"name": "fetch_hour", "type": "FLOAT", "mode": "NULLABLE"},
 ]
 
@@ -90,7 +90,7 @@ TABLE_SCHEMA_CREATION = [
     bigquery.SchemaField("price_change_percentage_24h_in_currency", "FLOAT", mode="NULLABLE"),
     bigquery.SchemaField("price_change_percentage_30d_in_currency", "FLOAT", mode="NULLABLE"),
     bigquery.SchemaField("price_change_percentage_7d_in_currency", "FLOAT", mode="NULLABLE"),
-    bigquery.SchemaField("fetch_date", "STRING", mode="NULLABLE"),
+    bigquery.SchemaField("fetch_date", "DATE", mode="NULLABLE"),
     bigquery.SchemaField("fetch_hour", "FLOAT", mode="NULLABLE"),
 ]
 
