@@ -31,6 +31,9 @@ def create_default_args():
         'start_date': datetime(2024, 12, 1),
         'retries': 1,
         'retry_delay': timedelta(minutes=5),
+        'email': ['tobiolutunmbi@gmail.com'],
+        'email_on_failure': True,
+        'email_on_retry': False,
     }
 
 
@@ -38,7 +41,12 @@ def execute_ingest():
     """
     Executes the ingestion operation.
     """
-    ingest_hourly.main()
+    try:
+        ingest_hourly.main()
+        logger.info("Data ingestion completed successfully.")
+    except Exception as e:
+        logger.error(f"Data ingestion failed: {e}")
+        raise
 
 
 def check_and_create_table(**kwargs):
@@ -46,42 +54,32 @@ def check_and_create_table(**kwargs):
     Checks if the BigQuery table exists. If not, creates it with the specified partitioning.
     """
     client = bigquery.Client()
-    table_id = f"{DATASET_ID}.{RAW_TABLE_ID}"
+    project_id = client.project
+    dataset_full_id = f"{project_id}.{DATASET_ID}"
+    table_full_id = f"{dataset_full_id}.{RAW_TABLE_ID}"
 
     try:
-        client.get_table(table_id)
-        logger.info(f"Table `{table_id}` already exists.")
+        client.get_dataset(dataset_full_id)
+        logger.info(f"Dataset `{dataset_full_id}` exists.")
     except NotFound:
-        table = bigquery.Table(table_id)
+        dataset = bigquery.Dataset(dataset_full_id)
+        client.create_dataset(dataset)
+        logger.info(f"Dataset `{dataset_full_id}` created.")
+
+    try:
+        client.get_table(table_full_id)
+        logger.info(f"Table `{table_full_id}` already exists.")
+    except NotFound:
+        table = bigquery.Table(table_full_id)
         table.time_partitioning = bigquery.TimePartitioning(
             type_=bigquery.TimePartitioningType.DAY,
             field=PARTITION_FIELD,
         )
         client.create_table(table)
-        logger.info(f"Table `{table_id}` created with partitioning on `{PARTITION_FIELD}`.")
+        logger.info(f"Table `{table_full_id}` created with partitioning on `{PARTITION_FIELD}`.")
     except Exception as e:
         logger.error(f"An unexpected error occurred: {e}")
         raise
-
-
-# def create_agg_table_if_not_exists(**kwargs):
-#     client = bigquery.Client()
-#     table_id = f"{DATASET_ID}.aggregated_table"
-#
-#     try:
-#         client.get_table(table_id)
-#         print(f"Aggregation Table {table_id} already exists.")
-#     except Exception:
-#         # Define schema for aggregation table
-#         schema = [
-#             bigquery.SchemaField("category", "STRING"),
-#             bigquery.SchemaField("total_count", "INTEGER"),
-#             bigquery.SchemaField("total_amount", "FLOAT"),
-#             # Add other aggregation fields as needed
-#         ]
-#         table = bigquery.Table(table_id, schema=schema)
-#         client.create_table(table)
-#         print(f"Aggregation Table {table_id} created with defined schema.")
 
 
 with DAG(
@@ -120,51 +118,5 @@ with DAG(
         },
     )
 
-
-    # # Check Aggregation Table Exists
-    # check_agg_table = BigQueryCheckOperator(
-    #     task_id='check_aggregation_table_exists',
-    #     sql=f"""
-    #             SELECT COUNT(*)
-    #             FROM `{DATASET_ID}.INFORMATION_SCHEMA.TABLES`
-    #             WHERE table_name = '{AGG_TABLE_ID}'
-    #         """,
-    #     use_legacy_sql=False,
-    # )
-
-
-    # # Create Aggregation Table if Not Exists
-    # create_agg_table = PythonOperator(
-    #     task_id='create_agg_table_if_not_exists',
-    #     python_callable=create_agg_table_if_not_exists,
-    #     provide_context=True,
-    # )
-
-    # # Perform Aggregations and Append to Aggregation Table
-    # aggregate_data = BigQueryInsertJobOperator(
-    #     task_id='aggregate_data',
-    #     configuration={
-    #         "query": {
-    #             "query": f"""
-    #                     INSERT INTO `{DATASET_ID}.{AGG_TABLE_ID}` (category, total_count, total_amount)
-    #                     SELECT
-    #                         category,
-    #                         COUNT(*) AS total_count,
-    #                         SUM(amount) AS total_amount
-    #                     FROM
-    #                         `{DATASET_ID}.{RAW_TABLE_ID}`
-    #                     WHERE
-    #                        {PARTITION_FIELD} >= TIMESTAMP_SUB(CURRENT_TIMESTAMP(), INTERVAL 1 HOUR)
-    #                     GROUP BY
-    #                         category
-    #                 """,
-    #             "useLegacySql": False,
-    #         }
-    #     },
-    # )
-
-
     # Define Task Dependencies
     run_ingest >> check_and_create_table_task >> load_raw_data
-    # check_agg_table >> create_agg_table_if_not_exists >> aggregate_data
-    # load_raw_data >> aggregate_data
