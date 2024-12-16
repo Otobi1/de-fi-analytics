@@ -44,7 +44,11 @@ TABLE_SCHEMA_OPERATOR = [
     {"name": "atl", "type": "FLOAT", "mode": "NULLABLE"},
     {"name": "atl_change_percentage", "type": "FLOAT", "mode": "NULLABLE"},
     {"name": "atl_date", "type": "STRING", "mode": "NULLABLE"},
-    {"name": "roi", "type": "RECORD", "mode": "NULLABLE"},
+    {"name": "roi", "type": "RECORD", "mode": "NULLABLE", "fields": [
+        {"name": "times", "type": "FLOAT", "mode": "NULLABLE"},
+        {"name": "currency", "type": "STRING", "mode": "NULLABLE"},
+        {"name": "percentage", "type": "FLOAT", "mode": "NULLABLE"},
+    ]},
     {"name": "last_updated", "type": "STRING", "mode": "NULLABLE"},
     {"name": "price_change_percentage_14d_in_currency", "type": "FLOAT", "mode": "NULLABLE"},
     {"name": "price_change_percentage_1y_in_currency", "type": "FLOAT", "mode": "NULLABLE"},
