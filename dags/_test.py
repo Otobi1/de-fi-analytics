@@ -19,54 +19,49 @@ GCS_BUCKET = "de-fi"
 GCS_PATH = "markets_hourly/*.parquet"
 PROJECT_ID = Variable.get("gcp_project_id")
 
-TABLE_SCHEMA = [
-    {"name": "id", "field_type": "STRING", "mode": "NULLABLE"},
-    {"name": "symbol", "field_type": "STRING", "mode": "NULLABLE"},
-    {"name": "name", "field_type": "STRING", "mode": "NULLABLE"},
-    {"name": "image", "field_type": "STRING", "mode": "NULLABLE"},
-    {"name": "current_price", "field_type": "FLOAT", "mode": "NULLABLE"},
-    {"name": "market_cap", "field_type": "FLOAT", "mode": "NULLABLE"},
-    {"name": "market_cap_change_24h", "field_type": "FLOAT", "mode": "NULLABLE"},
-    {"name": "total_volume", "field_type": "FLOAT", "mode": "NULLABLE"},
-    {"name": "fully_diluted_valuation", "field_type": "FLOAT", "mode": "NULLABLE"},
-    {"name": "high_24h", "field_type": "FLOAT", "mode": "NULLABLE"},
-    {"name": "low_24h", "field_type": "FLOAT", "mode": "NULLABLE"},
-    {"name": "price_change_24h", "field_type": "FLOAT", "mode": "NULLABLE"},
-    {"name": "price_change_percentage_24h", "field_type": "FLOAT", "mode": "NULLABLE"},
-    {"name": "circulating_supply", "field_type": "FLOAT", "mode": "NULLABLE"},
-    {"name": "total_supply", "field_type": "FLOAT", "mode": "NULLABLE"},
-    {"name": "max_supply", "field_type": "FLOAT", "mode": "NULLABLE"},
-    {"name": "market_cap_change_percentage_24h", "field_type": "FLOAT", "mode": "NULLABLE"},
-    {"name": "ath", "field_type": "FLOAT", "mode": "NULLABLE"},
-    {"name": "ath_change_percentage", "field_type": "FLOAT", "mode": "NULLABLE"},
-    {"name": "ath_date", "field_type": "STRING", "mode": "NULLABLE"},
-    {"name": "atl", "field_type": "FLOAT", "mode": "NULLABLE"},
-    {"name": "atl_change_percentage", "field_type": "FLOAT", "mode": "NULLABLE"},
-    {"name": "atl_date", "field_type": "STRING", "mode": "NULLABLE"},
-    {"name": "roi", "field_type": "FLOAT", "mode": "NULLABLE"},
-    {"name": "last_updated", "field_type": "STRING", "mode": "NULLABLE"},
-    {"name": "price_change_percentage_14d_in_currency", "field_type": "FLOAT", "mode": "NULLABLE"},
-    {"name": "price_change_percentage_1y_in_currency", "field_type": "FLOAT", "mode": "NULLABLE"},
-    {"name": "price_change_percentage_24h_in_currency", "field_type": "FLOAT", "mode": "NULLABLE"},
-    {"name": "price_change_percentage_30d_in_currency", "field_type": "FLOAT", "mode": "NULLABLE"},
-    {"name": "price_change_percentage_7d_in_currency", "field_type": "FLOAT", "mode": "NULLABLE"},
-    {"name": "fetch_date", "field_type": "DATE", "mode": "NULLABLE"},  # Changed to DATE
-    {"name": "fetch_hour", "field_type": "FLOAT", "mode": "NULLABLE"},
+TABLE_SCHEMA_OPERATOR = [
+    {"name": "id", "type": "STRING", "mode": "NULLABLE"},
+    {"name": "symbol", "type": "STRING", "mode": "NULLABLE"},
+    {"name": "name", "type": "STRING", "mode": "NULLABLE"},
+    {"name": "image", "type": "STRING", "mode": "NULLABLE"},
+    {"name": "current_price", "type": "FLOAT", "mode": "NULLABLE"},
+    {"name": "market_cap", "type": "FLOAT", "mode": "NULLABLE"},
+    {"name": "market_cap_change_24h", "type": "FLOAT", "mode": "NULLABLE"},
+    {"name": "total_volume", "type": "FLOAT", "mode": "NULLABLE"},
+    {"name": "fully_diluted_valuation", "type": "FLOAT", "mode": "NULLABLE"},
+    {"name": "high_24h", "type": "FLOAT", "mode": "NULLABLE"},
+    {"name": "low_24h", "type": "FLOAT", "mode": "NULLABLE"},
+    {"name": "price_change_24h", "type": "FLOAT", "mode": "NULLABLE"},
+    {"name": "price_change_percentage_24h", "type": "FLOAT", "mode": "NULLABLE"},
+    {"name": "circulating_supply", "type": "FLOAT", "mode": "NULLABLE"},
+    {"name": "total_supply", "type": "FLOAT", "mode": "NULLABLE"},
+    {"name": "max_supply", "type": "FLOAT", "mode": "NULLABLE"},
+    {"name": "market_cap_change_percentage_24h", "type": "FLOAT", "mode": "NULLABLE"},
+    {"name": "ath", "type": "FLOAT", "mode": "NULLABLE"},
+    {"name": "ath_change_percentage", "type": "FLOAT", "mode": "NULLABLE"},
+    {"name": "ath_date", "type": "STRING", "mode": "NULLABLE"},
+    {"name": "atl", "type": "FLOAT", "mode": "NULLABLE"},
+    {"name": "atl_change_percentage", "type": "FLOAT", "mode": "NULLABLE"},
+    {"name": "atl_date", "type": "STRING", "mode": "NULLABLE"},
+    {"name": "roi", "type": "FLOAT", "mode": "NULLABLE"},
+    {"name": "last_updated", "type": "STRING", "mode": "NULLABLE"},
+    {"name": "price_change_percentage_14d_in_currency", "type": "FLOAT", "mode": "NULLABLE"},
+    {"name": "price_change_percentage_1y_in_currency", "type": "FLOAT", "mode": "NULLABLE"},
+    {"name": "price_change_percentage_24h_in_currency", "type": "FLOAT", "mode": "NULLABLE"},
+    {"name": "price_change_percentage_30d_in_currency", "type": "FLOAT", "mode": "NULLABLE"},
+    {"name": "price_change_percentage_7d_in_currency", "type": "FLOAT", "mode": "NULLABLE"},
+    {"name": "fetch_date", "type": "STRING", "mode": "NULLABLE"},  # Changed to DATE
+    {"name": "fetch_hour", "type": "FLOAT", "mode": "NULLABLE"},
 ]
 
-# Convert to bigquery.SchemaField for table creation
 TABLE_SCHEMA_CREATION = [
     bigquery.SchemaField(
         name=field["name"],
-        field_type=field["field_type"],
+        field_type=field["type"],
         mode=field["mode"],
-        description=field.get("description"),
-        fields=field.get("fields"),
-        policy_tags=field.get("policy_tags"),
     )
-    for field in TABLE_SCHEMA
+    for field in TABLE_SCHEMA_OPERATOR
 ]
-
 
 CLUSTERING_FIELD = ["id"]
 
@@ -155,7 +150,7 @@ with DAG(
         destination_project_dataset_table=f"{DATASET_ID}.{RAW_TABLE_ID}",
         source_format='PARQUET',
         write_disposition='WRITE_APPEND',
-        schema_fields=TABLE_SCHEMA,
+        schema_fields=TABLE_SCHEMA_OPERATOR,
     )
 
     # Define Task Dependencies
