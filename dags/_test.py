@@ -143,17 +143,17 @@ with DAG(
         python_callable=check_and_create_table,
     )
 
-    #
-    # # Load Data into Raw Table
-    # load_raw_data = GCSToBigQueryOperator(
-    #     task_id='load_raw_data',
-    #     bucket=GCS_BUCKET,
-    #     source_objects=[GCS_PATH],
-    #     destination_project_dataset_table=f"{DATASET_ID}.{RAW_TABLE_ID}",
-    #     source_format='PARQUET',
-    #     write_disposition='WRITE_APPEND',
-    #     schema_fields=TABLE_SCHEMA_OPERATOR,
-    # )
+
+    # Load Data into Raw Table
+    load_raw_data = GCSToBigQueryOperator(
+        task_id='load_raw_data',
+        bucket=GCS_BUCKET,
+        source_objects=[GCS_PATH],
+        destination_project_dataset_table=f"{DATASET_ID}.{RAW_TABLE_ID}",
+        source_format='PARQUET',
+        write_disposition='WRITE_APPEND',
+        schema_fields=TABLE_SCHEMA_OPERATOR,
+    )
 
     # Define Task Dependencies
-    run_ingest >> check_and_create_table_task  #>> load_raw_data
+    run_ingest >> check_and_create_table_task  >> load_raw_data
