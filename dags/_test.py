@@ -1,22 +1,23 @@
 
+import logging
+from datetime import datetime, timedelta
+
+import test_ingest_hourly
 from airflow import DAG
+from airflow.models import Variable
 from airflow.providers.google.cloud.transfers.gcs_to_bigquery import GCSToBigQueryOperator
 from airflow.operators.python import PythonOperator
 from google.cloud import bigquery
 from google.api_core.exceptions import NotFound
-from airflow.models import Variable
-from datetime import datetime, timedelta
-import logging
-import ingest_hourly
-
+from google.cloud import bigquery
 
 logger = logging.getLogger(__name__)
 
 # Constants
 DATASET_ID = "de_fi_analytics"
-RAW_TABLE_ID = "de_fi_hourly"
+RAW_TABLE_ID = "test_de_fi_hourly"
 GCS_BUCKET = "de-fi"
-GCS_PATH = "markets_hourly/*.parquet"
+GCS_PATH = "test_markets_hourly/*.parquet"
 PROJECT_ID = Variable.get("gcp_project_id")
 
 TABLE_SCHEMA_OPERATOR = [
@@ -24,33 +25,33 @@ TABLE_SCHEMA_OPERATOR = [
     {"name": "symbol", "type": "STRING", "mode": "NULLABLE"},
     {"name": "name", "type": "STRING", "mode": "NULLABLE"},
     {"name": "image", "type": "STRING", "mode": "NULLABLE"},
-    {"name": "current_price", "type": "FLOAT", "mode": "NULLABLE"},
-    {"name": "market_cap", "type": "INT64", "mode": "NULLABLE"},
-    {"name": "market_cap_rank", "type": "INT64", "mode": "NULLABLE"},
-    {"name": "market_cap_change_24h", "type": "FLOAT", "mode": "NULLABLE"},
-    {"name": "total_volume", "type": "FLOAT", "mode": "NULLABLE"},
-    {"name": "fully_diluted_valuation", "type": "INT64", "mode": "NULLABLE"},
-    {"name": "high_24h", "type": "FLOAT", "mode": "NULLABLE"},
-    {"name": "low_24h", "type": "FLOAT", "mode": "NULLABLE"},
-    {"name": "price_change_24h", "type": "FLOAT", "mode": "NULLABLE"},
-    {"name": "price_change_percentage_24h", "type": "FLOAT", "mode": "NULLABLE"},
-    {"name": "circulating_supply", "type": "FLOAT", "mode": "NULLABLE"},
-    {"name": "total_supply", "type": "FLOAT", "mode": "NULLABLE"},
-    {"name": "max_supply", "type": "FLOAT", "mode": "NULLABLE"},
-    {"name": "market_cap_change_percentage_24h", "type": "FLOAT", "mode": "NULLABLE"},
-    {"name": "ath", "type": "FLOAT", "mode": "NULLABLE"},
-    {"name": "ath_change_percentage", "type": "FLOAT", "mode": "NULLABLE"},
+    {"name": "current_price", "type": "STRING", "mode": "NULLABLE"},
+    {"name": "market_cap", "type": "STRING", "mode": "NULLABLE"},
+    {"name": "market_cap_rank", "type": "STRING", "mode": "NULLABLE"},
+    {"name": "market_cap_change_24h", "type": "STRING", "mode": "NULLABLE"},
+    {"name": "total_volume", "type": "STRING", "mode": "NULLABLE"},
+    {"name": "fully_diluted_valuation", "type": "STRING", "mode": "NULLABLE"},
+    {"name": "high_24h", "type": "STRING", "mode": "NULLABLE"},
+    {"name": "low_24h", "type": "STRING", "mode": "NULLABLE"},
+    {"name": "price_change_24h", "type": "STRING", "mode": "NULLABLE"},
+    {"name": "price_change_percentage_24h", "type": "STRING", "mode": "NULLABLE"},
+    {"name": "circulating_supply", "type": "STRING", "mode": "NULLABLE"},
+    {"name": "total_supply", "type": "STRING", "mode": "NULLABLE"},
+    {"name": "max_supply", "type": "STRING", "mode": "NULLABLE"},
+    {"name": "market_cap_change_percentage_24h", "type": "STRING", "mode": "NULLABLE"},
+    {"name": "ath", "type": "STRING", "mode": "NULLABLE"},
+    {"name": "ath_change_percentage", "type": "STRING", "mode": "NULLABLE"},
     {"name": "ath_date", "type": "STRING", "mode": "NULLABLE"},
-    {"name": "atl", "type": "FLOAT", "mode": "NULLABLE"},
-    {"name": "atl_change_percentage", "type": "FLOAT", "mode": "NULLABLE"},
+    {"name": "atl", "type": "STRING", "mode": "NULLABLE"},
+    {"name": "atl_change_percentage", "type": "STRING", "mode": "NULLABLE"},
     {"name": "atl_date", "type": "STRING", "mode": "NULLABLE"},
     {"name": "roi", "type": "STRING", "mode": "NULLABLE"},
     {"name": "last_updated", "type": "STRING", "mode": "NULLABLE"},
-    {"name": "price_change_percentage_14d_in_currency", "type": "FLOAT", "mode": "NULLABLE"},
-    {"name": "price_change_percentage_1y_in_currency", "type": "FLOAT", "mode": "NULLABLE"},
-    {"name": "price_change_percentage_24h_in_currency", "type": "FLOAT", "mode": "NULLABLE"},
-    {"name": "price_change_percentage_30d_in_currency", "type": "FLOAT", "mode": "NULLABLE"},
-    {"name": "price_change_percentage_7d_in_currency", "type": "FLOAT", "mode": "NULLABLE"},
+    {"name": "price_change_percentage_14d_in_currency", "type": "STRING", "mode": "NULLABLE"},
+    {"name": "price_change_percentage_1y_in_currency", "type": "STRING", "mode": "NULLABLE"},
+    {"name": "price_change_percentage_24h_in_currency", "type": "STRING", "mode": "NULLABLE"},
+    {"name": "price_change_percentage_30d_in_currency", "type": "STRING", "mode": "NULLABLE"},
+    {"name": "price_change_percentage_7d_in_currency", "type": "STRING", "mode": "NULLABLE"},
     {"name": "fetch_date", "type": "STRING", "mode": "NULLABLE"},
     {"name": "fetch_hour", "type": "STRING", "mode": "NULLABLE"},
 ]
@@ -85,7 +86,7 @@ def execute_ingest():
     Executes the ingestion operation.
     """
     try:
-        ingest_hourly.main()
+        test_ingest_hourly.main()
         logger.info("Data ingestion completed successfully.")
     except Exception as e:
         logger.error(f"Data ingestion failed: {e}")
@@ -142,17 +143,17 @@ with DAG(
         python_callable=check_and_create_table,
     )
 
-
-    # Load Data into Raw Table
-    load_raw_data = GCSToBigQueryOperator(
-        task_id='load_raw_data',
-        bucket=GCS_BUCKET,
-        source_objects=[GCS_PATH],
-        destination_project_dataset_table=f"{DATASET_ID}.{RAW_TABLE_ID}",
-        source_format='PARQUET',
-        write_disposition='WRITE_APPEND',
-        schema_fields=TABLE_SCHEMA_OPERATOR,
-    )
+    #
+    # # Load Data into Raw Table
+    # load_raw_data = GCSToBigQueryOperator(
+    #     task_id='load_raw_data',
+    #     bucket=GCS_BUCKET,
+    #     source_objects=[GCS_PATH],
+    #     destination_project_dataset_table=f"{DATASET_ID}.{RAW_TABLE_ID}",
+    #     source_format='PARQUET',
+    #     write_disposition='WRITE_APPEND',
+    #     schema_fields=TABLE_SCHEMA_OPERATOR,
+    # )
 
     # Define Task Dependencies
-    run_ingest >> check_and_create_table_task >> load_raw_data
+    run_ingest >> check_and_create_table_task  #>> load_raw_data
