@@ -64,6 +64,14 @@ TABLE_SCHEMA_CREATION = [
         name=field["name"],
         field_type=field["type"],
         mode=field["mode"],
+        fields=[
+            bigquery.SchemaField(
+                name=sub_field["name"],
+                field_type=sub_field["type"],
+                mode=sub_field["mode"],
+            )
+            for sub_field in field.get("fields", [])
+        ] if field["type"] == "RECORD" else None,
     )
     for field in TABLE_SCHEMA_OPERATOR
 ]
