@@ -1,9 +1,5 @@
+
 from airflow import DAG
-from airflow.utils.dates import days_ago
-from airflow.providers.google.cloud.operators.bigquery import (
-    BigQueryCheckOperator,
-    BigQueryInsertJobOperator,
-)
 from airflow.providers.google.cloud.transfers.gcs_to_bigquery import GCSToBigQueryOperator
 from airflow.operators.python import PythonOperator
 from google.cloud import bigquery
@@ -21,9 +17,9 @@ DATASET_ID = "de_fi_analytics"
 RAW_TABLE_ID = "de_fi_hourly"
 GCS_BUCKET = "de-fi"
 GCS_PATH = "markets_hourly/*.parquet"
-PARTITION_FIELD = "fetch_date"
+PROJECT_ID = Variable.get("gcp_project_id")
 
-TABLE_SCHEMA_OPERATOR = [
+TABLE_SCHEMA = [
     {"name": "id", "type": "STRING", "mode": "NULLABLE"},
     {"name": "symbol", "type": "STRING", "mode": "NULLABLE"},
     {"name": "name", "type": "STRING", "mode": "NULLABLE"},
@@ -54,50 +50,22 @@ TABLE_SCHEMA_OPERATOR = [
     {"name": "price_change_percentage_24h_in_currency", "type": "FLOAT", "mode": "NULLABLE"},
     {"name": "price_change_percentage_30d_in_currency", "type": "FLOAT", "mode": "NULLABLE"},
     {"name": "price_change_percentage_7d_in_currency", "type": "FLOAT", "mode": "NULLABLE"},
-    {"name": "fetch_date", "type": "DATE", "mode": "NULLABLE"},
+    {"name": "fetch_date", "type": "STRING", "mode": "NULLABLE"},
     {"name": "fetch_hour", "type": "FLOAT", "mode": "NULLABLE"},
 ]
 
 # Define the table schema using SchemaField for table creation
 TABLE_SCHEMA_CREATION = [
-    bigquery.SchemaField("id", "STRING", mode="NULLABLE"),
-    bigquery.SchemaField("symbol", "STRING", mode="NULLABLE"),
-    bigquery.SchemaField("name", "STRING", mode="NULLABLE"),
-    bigquery.SchemaField("image", "STRING", mode="NULLABLE"),
-    bigquery.SchemaField("current_price", "FLOAT", mode="NULLABLE"),
-    bigquery.SchemaField("market_cap", "FLOAT", mode="NULLABLE"),
-    bigquery.SchemaField("market_cap_change_24h", "FLOAT", mode="NULLABLE"),
-    bigquery.SchemaField("total_volume", "FLOAT", mode="NULLABLE"),
-    bigquery.SchemaField("fully_diluted_valuation", "FLOAT", mode="NULLABLE"),
-    bigquery.SchemaField("high_24h", "FLOAT", mode="NULLABLE"),
-    bigquery.SchemaField("low_24h", "FLOAT", mode="NULLABLE"),
-    bigquery.SchemaField("price_change_24h", "FLOAT", mode="NULLABLE"),
-    bigquery.SchemaField("price_change_percentage_24h", "FLOAT", mode="NULLABLE"),
-    bigquery.SchemaField("circulating_supply", "FLOAT", mode="NULLABLE"),
-    bigquery.SchemaField("total_supply", "FLOAT", mode="NULLABLE"),
-    bigquery.SchemaField("max_supply", "FLOAT", mode="NULLABLE"),
-    bigquery.SchemaField("market_cap_change_percentage_24h", "FLOAT", mode="NULLABLE"),
-    bigquery.SchemaField("ath", "FLOAT", mode="NULLABLE"),
-    bigquery.SchemaField("ath_change_percentage", "FLOAT", mode="NULLABLE"),
-    bigquery.SchemaField("ath_date", "STRING", mode="NULLABLE"),
-    bigquery.SchemaField("atl", "FLOAT", mode="NULLABLE"),
-    bigquery.SchemaField("atl_change_percentage", "FLOAT", mode="NULLABLE"),
-    bigquery.SchemaField("atl_date", "STRING", mode="NULLABLE"),
-    bigquery.SchemaField("roi", "FLOAT", mode="NULLABLE"),
-    bigquery.SchemaField("last_updated", "STRING", mode="NULLABLE"),
-    bigquery.SchemaField("price_change_percentage_14d_in_currency", "FLOAT", mode="NULLABLE"),
-    bigquery.SchemaField("price_change_percentage_1y_in_currency", "FLOAT", mode="NULLABLE"),
-    bigquery.SchemaField("price_change_percentage_24h_in_currency", "FLOAT", mode="NULLABLE"),
-    bigquery.SchemaField("price_change_percentage_30d_in_currency", "FLOAT", mode="NULLABLE"),
-    bigquery.SchemaField("price_change_percentage_7d_in_currency", "FLOAT", mode="NULLABLE"),
-    bigquery.SchemaField("fetch_date", "DATE", mode="NULLABLE"),
-    bigquery.SchemaField("fetch_hour", "FLOAT", mode="NULLABLE"),
+    bigquery.SchemaField(**field) for field in TABLE_SCHEMA
 ]
+
+
+CLUSTERING_FIELD = ["id"]
 
 
 def create_default_args():
     return {
-        # 'owner': 'tobi.olutunmbi',
+        'owner': 'tobi.olutunmbi',
         # 'depends_on_past': False,
         'start_date': datetime(2024, 12, 1),
         'retries': 1,
@@ -122,9 +90,9 @@ def execute_ingest():
 
 def check_and_create_table(**kwargs):
     """
-    Checks if the BigQuery table exists. If not, creates it with the specified partitioning.
+    Checks if the BigQuery table exists. If not, creates it with clustering.
     """
-    client = bigquery.Client(project='sapient-hub-442421-b5')
+    client = bigquery.Client(project=PROJECT_ID)
     project_id = client.project
     dataset_full_id = f"{project_id}.{DATASET_ID}"
     table_full_id = f"{dataset_full_id}.{RAW_TABLE_ID}"
@@ -142,12 +110,9 @@ def check_and_create_table(**kwargs):
         logger.info(f"Table `{table_full_id}` already exists.")
     except NotFound:
         table = bigquery.Table(table_full_id, schema=TABLE_SCHEMA_CREATION)
-        table.time_partitioning = bigquery.TimePartitioning(
-            type_=bigquery.TimePartitioningType.DAY,
-            field=PARTITION_FIELD,
-        )
+        table.clustering_fields = CLUSTERING_FIELD
         client.create_table(table)
-        logger.info(f"Table `{table_full_id}` created with partitioning on `{PARTITION_FIELD}`.")
+        logger.info(f"Table `{table_full_id}` created with clustering on {CLUSTERING_FIELD}.")
     except Exception as e:
         logger.error(f"An unexpected error occurred: {e}")
         raise
@@ -182,11 +147,7 @@ with DAG(
         destination_project_dataset_table=f"{DATASET_ID}.{RAW_TABLE_ID}",
         source_format='PARQUET',
         write_disposition='WRITE_APPEND',
-        schema_fields=TABLE_SCHEMA_OPERATOR,
-        time_partitioning={
-            "type": "DAY",
-            "field": PARTITION_FIELD,
-        },
+        schema_fields=TABLE_SCHEMA,
     )
 
     # Define Task Dependencies
