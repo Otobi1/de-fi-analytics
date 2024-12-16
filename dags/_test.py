@@ -51,7 +51,7 @@ TABLE_SCHEMA_OPERATOR = [
     {"name": "price_change_percentage_30d_in_currency", "type": "FLOAT", "mode": "NULLABLE"},
     {"name": "price_change_percentage_7d_in_currency", "type": "FLOAT", "mode": "NULLABLE"},
     {"name": "fetch_date", "type": "STRING", "mode": "NULLABLE"},  # Changed to DATE
-    {"name": "fetch_hour", "type": "FLOAT", "mode": "NULLABLE"},
+    {"name": "fetch_hour", "type": "STRING", "mode": "NULLABLE"},
 ]
 
 TABLE_SCHEMA_CREATION = [
