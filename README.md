@@ -13,9 +13,8 @@ Provision and manage
 ```
 
 [**Cloudbuild Config**](https://github.com/Otobi1/de-fi-analytics/blob/master/cloudbuild.yaml)
-```
-- defined build steps including how to get the files from github into composer environment
-```
+
+> Defined build steps including how to get the files from github into composer environment
 
 **Ingest Data into GCS**
 
