@@ -21,6 +21,7 @@ GCS_PATH = "test_markets_hourly/*.parquet"
 PROJECT_ID = Variable.get("gcp_project_id")
 
 TABLE_SCHEMA_OPERATOR = [
+    {"name": "fetch_timestamp", "type": "TIMESTAMP", "mode": "REQUIRED"},
     {"name": "id", "type": "STRING", "mode": "NULLABLE"},
     {"name": "symbol", "type": "STRING", "mode": "NULLABLE"},
     {"name": "name", "type": "STRING", "mode": "NULLABLE"},
@@ -92,10 +93,9 @@ def execute_ingest():
         logger.error(f"Data ingestion failed: {e}")
         raise
 
-
 def check_and_create_table(**kwargs):
     """
-    Checks if the BigQuery table exists. If not, creates it with clustering.
+    Checks if the BigQuery table exists. If not, creates it with partitioning and clustering.
     """
     client = bigquery.Client(project=PROJECT_ID)
     project_id = client.project
@@ -111,13 +111,17 @@ def check_and_create_table(**kwargs):
         logger.info(f"Dataset `{dataset_full_id}` created.")
 
     try:
-        client.get_table(table_full_id)
+        table = client.get_table(table_full_id)
         logger.info(f"Table `{table_full_id}` already exists.")
     except NotFound:
         table = bigquery.Table(table_full_id, schema=TABLE_SCHEMA_CREATION)
+        table.time_partitioning = bigquery.TimePartitioning(
+            type_=bigquery.TimePartitioningType.DAY,
+            field="fetch_timestamp",
+        )
         table.clustering_fields = CLUSTERING_FIELD
         client.create_table(table)
-        logger.info(f"Table `{table_full_id}` created with clustering on {CLUSTERING_FIELD}.")
+        logger.info(f"Table `{table_full_id}` created with partitioning on `fetch_timestamp` and clustering on {CLUSTERING_FIELD}.")
     except Exception as e:
         logger.error(f"An unexpected error occurred: {e}")
         raise
@@ -128,6 +132,7 @@ with DAG(
         schedule_interval='@hourly',
         default_args=create_default_args(),
         catchup=False,
+        max_active_runs=1,
         description='A DAG to ingest CoinGecko data from CSV list into GCS',
 ) as dag:
 
@@ -153,6 +158,10 @@ with DAG(
         source_format='PARQUET',
         write_disposition='WRITE_APPEND',
         schema_fields=TABLE_SCHEMA_OPERATOR,
+        time_partitioning={
+            'type': 'DAY',
+            'field': 'fetch_timestamp',
+        },
     )
 
     # Define Task Dependencies
