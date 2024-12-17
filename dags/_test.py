@@ -158,10 +158,11 @@ with DAG(
         source_format='PARQUET',
         write_disposition='WRITE_APPEND',
         schema_fields=TABLE_SCHEMA_OPERATOR,
-        time_partitioning={
-            'type': 'DAY',
-            'field': 'fetch_timestamp',
-        },
+        # time_partitioning={
+        #     'type': 'DAY',
+        #     'field': 'fetch_timestamp',
+        # },
+        # clustering_fields=CLUSTERING_FIELD,
     )
 
     # Define Task Dependencies
