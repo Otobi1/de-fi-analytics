@@ -1,6 +1,8 @@
 **Project Overview**
-analytics project for decentralised finance
-![trad-fi analytics](de_fi_analytics.png)
+
+Analytics project for decentralised finance using data from coingecko.
+
+![de-fi analytics](de_fi_analytics.png)
 
 [**Set up Infrastructure**](https://github.com/Otobi1/de-fi-analytics/blob/master/terraform/main.tf)
 ```
@@ -25,8 +27,8 @@ Provision and manage
 > Ingest partitioned and clustered hourly data for the top 100 coins into GCS
 
 **Outcome**
-> * Overcame the limitation from the trad-fi-analytics project by ensuring that the ingestion process and publishing raw data to Bigquery is automated using cloudbuild and composer.
+> * Overcame the limitation from the [trad-fi-analytics](https://github.com/Otobi1/trad-fi-analytics) by automating the data ingestion and publishing to Bigquery using cloudbuild and composer.
 
 **Limitation**
-> * Composer quite expensive, exhausted the free credits very quickly even at lower config tier
-> * Transformations not possible due to the exhaustion of the credits.
+> * Composer is quite expensive, exhausted the free credits very quickly even at a lower resource usage tier
+> * Transformations and reporting was not possible due to the exhaustion of the credits.
